@@ -5,6 +5,8 @@ import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
+import PriceTag from '@/components/PriceTag'
+import StockLabel, { SoldOutOverlay } from '@/components/StockLabel'
 import { artworks, categories } from '@/data/artworks'
 
 function ShopContent() {
@@ -94,18 +96,20 @@ function ShopContent() {
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-10 sm:gap-x-5 sm:gap-y-12">
               {filtered.map((art) => (
                 <Link href={`/artwork/${art.id}`} key={art.id} className="group block">
-                  <div className="aspect-[3/4] overflow-hidden mb-3 bg-[var(--border)]">
+                  <div className="relative aspect-[3/4] overflow-hidden mb-3 bg-[var(--border)]">
                     <img src={art.image} alt={art.title}
                       className="w-full h-full object-cover img-zoom" />
+                    {!art.available && <SoldOutOverlay />}
                   </div>
                   <h3 className="font-display text-sm sm:text-base truncate">{art.title}</h3>
                   <p className="text-[var(--text-light)] text-[11px] mt-0.5">{art.medium}</p>
                   <p className="text-[var(--text-light)] text-[9px] tracking-[0.1em] uppercase mt-0.5">{art.category}</p>
-                  <div className="flex items-center justify-between mt-1.5">
-                    <p className="font-classic text-sm">
-                      {art.price ? `₹${art.price}` : 'Price on Request'}
-                    </p>
-                    <span className="text-[10px] tracking-[0.1em] uppercase text-[var(--accent)] opacity-0 group-hover:opacity-100 transition-opacity">
+                  {(art.category === 'Originals' || !art.available) && (
+                    <StockLabel artwork={art} className="block text-[9px] tracking-[0.1em] uppercase mt-0.5" />
+                  )}
+                  <div className="flex items-center justify-between gap-2 mt-1.5">
+                    <PriceTag artwork={art} />
+                    <span className="hidden lg:inline-block text-[10px] tracking-[0.1em] uppercase text-[var(--accent)] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
                       View Details &rarr;
                     </span>
                   </div>

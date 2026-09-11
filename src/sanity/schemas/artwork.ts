@@ -50,6 +50,13 @@ export default defineType({
       description: 'The story behind this artwork',
     }),
     defineField({
+      name: 'inspiration',
+      title: 'What Inspired This',
+      type: 'text',
+      rows: 8,
+      description: 'A longer, personal note on what inspired the piece. Shown as its own section under the story.',
+    }),
+    defineField({
       name: 'mainImage',
       title: 'Main Image',
       type: 'image',
@@ -85,6 +92,18 @@ export default defineType({
       title: 'Price',
       type: 'string',
       description: 'Leave empty for "Price on Request"',
+    }),
+    defineField({
+      name: 'originalPrice',
+      title: 'Original Price (before discount)',
+      type: 'string',
+      description: 'Shown struck out next to the price, with the discount % badge. Leave empty for no discount.',
+    }),
+    defineField({
+      name: 'priceFrom',
+      title: 'Price is a starting point',
+      type: 'boolean',
+      description: 'Shows the price as "onwards" — for made-to-order items where the final price depends on the design.',
     }),
     defineField({
       name: 'medium',

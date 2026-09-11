@@ -1,11 +1,101 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
+import PriceTag from '@/components/PriceTag'
+import StockLabel, { SoldOutOverlay } from '@/components/StockLabel'
+import { artworks, categories, Artwork } from '@/data/artworks'
+
+const d = (id: string) => `https://lh3.googleusercontent.com/d/${id}`
+
+const HERO_QUOTE = 'Where every brushstroke tells a story.'
+
+const PREVIEW_COUNT = 12
+
+// Always shown first in the "All" mix, ahead of the category round-robin.
+const PINNED_IDS = ['autumn-serenity-forest-path', 'print-autumn-serenity']
+
+// Everything made to order, grouped behind the one Customization button.
+const CUSTOM_FILTER = 'Customization'
+const CUSTOM_CATEGORIES = ['Commissions', 'Home Decor', 'Painted Bags', 'Handmade Cards', 'Painted Tees', 'Portraits']
+
+const heroSlides = [
+  { title: 'Maa Durga — Divine Fury', img: d('1Eqjxlph19X978jzZGMe1t4l8LqSaVl5b') },
+  { title: 'Lord Shiva — The Destroyer', img: d('1hwX0uuQVUAxHxwpu5aBG0t_v4fn1w6RB') },
+  { title: 'Wild Horses — Freedom in Motion', img: d('1uC-YjXcY7HX7ktI7jU0ODT7P8z4yXcQH') },
+  { title: 'Lord Krishna — The Divine Flute', img: d('1oOUE0mQ08hsXuhwmyskQE1CLJ1cs1h9D') },
+  { title: 'Autumn Serenity — Forest Path', img: d('1nT22BcR8XTFeTKby1HXK-V0GpuXvM_mn') },
+  { title: 'Lord Ganesha — Remover of Obstacles', img: d('1dDHqZzgsrGS-1gP4944zuKHor9FaJEYV') },
+]
+
+const N = heroSlides.length
+// Three copies of the strip, so a neighbour is always in frame on both sides —
+// including when the first or last painting is the one centred.
+const heroLoop = [...heroSlides, ...heroSlides, ...heroSlides]
 
 export default function Home() {
-  const d = (id: string) => `https://lh3.googleusercontent.com/d/${id}`
+  const [pos, setPos] = useState(N)
+  const [animating, setAnimating] = useState(true)
+  const [activeCat, setActiveCat] = useState('All')
+
+  const active = ((pos % N) + N) % N
+
+  useEffect(() => {
+    const timer = setTimeout(() => setPos(p => p + 1), 4500)
+    return () => clearTimeout(timer)
+  }, [active])
+
+  // Once a slide settles outside the middle copy, hop back to the matching
+  // slide in the middle copy with the transition switched off. The image on
+  // screen is identical, so the hop is invisible — it just restocks the clones
+  // on either side.
+  useEffect(() => {
+    if (pos >= 2 * N || pos < N) {
+      const t = setTimeout(() => {
+        setAnimating(false)
+        setPos(N + active)
+      }, 1200)
+      return () => clearTimeout(t)
+    }
+  }, [pos, active])
+
+  // Re-arm the transition a frame after the silent hop, so the hop itself
+  // never animates but the next slide does.
+  useEffect(() => {
+    if (animating) return
+    let inner = 0
+    const outer = requestAnimationFrame(() => { inner = requestAnimationFrame(() => setAnimating(true)) })
+    return () => { cancelAnimationFrame(outer); cancelAnimationFrame(inner) }
+  }, [animating])
+
+  // Round-robins across the given categories so the grid reads as a spread
+  // rather than a run of one category.
+  const mixAcross = (cats: string[], pinned: Artwork[] = []) => {
+    const mix = [...pinned]
+    const taken = new Set(mix.map(a => a.id))
+    const buckets = cats.map(c => artworks.filter(a => a.category === c && !taken.has(a.id)))
+
+    for (let i = 0; mix.length < PREVIEW_COUNT; i++) {
+      const before = mix.length
+      buckets.forEach(b => { if (b[i] && mix.length < PREVIEW_COUNT) mix.push(b[i]) })
+      if (mix.length === before) break
+    }
+    return mix
+  }
+
+  const galleryPreview = (() => {
+    if (activeCat === CUSTOM_FILTER) return mixAcross(CUSTOM_CATEGORIES)
+    if (activeCat !== 'All') return artworks.filter(a => a.category === activeCat).slice(0, PREVIEW_COUNT)
+
+    // Commissions are left out of "All" — they're custom work, reached via the
+    // Customization button rather than browsed.
+    const pinned = PINNED_IDS
+      .map(id => artworks.find(a => a.id === id))
+      .filter((a): a is Artwork => Boolean(a))
+    return mixAcross(categories.filter(c => c !== 'All' && c !== 'Commissions'), pinned)
+  })()
 
   const collections = [
     {
@@ -69,44 +159,58 @@ export default function Home() {
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
       <Navbar />
 
-      {/* ════════ HERO — split layout ════════ */}
-      <section className="pt-20 lg:pt-0 min-h-screen flex items-center">
-        <div className="max-w-[1400px] mx-auto px-6 lg:px-12 w-full">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-            <div className="order-2 lg:order-1 py-12 lg:py-0">
-              <p className="text-[11px] tracking-[0.3em] uppercase text-[var(--accent)] mb-6 animate-fade-up font-medium">
-                Muskan Art Studio
-              </p>
-              <h1 className="animate-fade-up" style={{animationDelay: '0.12s'}}>
-                <span className="block font-body font-extralight text-4xl sm:text-5xl lg:text-6xl xl:text-7xl tracking-tight leading-[1.05]">
-                  Where Every
-                </span>
-                <span className="block font-classic italic text-4xl sm:text-5xl lg:text-6xl xl:text-7xl text-[var(--accent)] leading-[1.15] mt-1">
-                  Brushstroke
-                </span>
-                <span className="block font-body font-extralight text-4xl sm:text-5xl lg:text-6xl xl:text-7xl tracking-tight leading-[1.05] mt-1">
-                  Tells a Story
-                </span>
+      {/* ════════ HERO — centered slider with peeking neighbours ════════ */}
+      <section className="pt-16 lg:pt-20 pb-10 lg:pb-12">
+        {/* Slide width is capped in rem so the image is never scaled up past its
+            natural size on wide screens, and capped against the viewport height
+            so the hero always fits without scrolling. */}
+        <div className="relative w-full overflow-hidden animate-fade-up"
+          style={{
+            animationDelay: '0.2s',
+            '--slide-w': 'min(86vw, 34rem, (100vh - 11rem) * 0.8)',
+            '--slide-gap': '1rem',
+          } as React.CSSProperties}>
+
+          <div className="flex transition-transform duration-[1100ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
+            style={{
+              transform: `translateX(calc(50% - var(--slide-w) / 2 - ${pos} * (var(--slide-w) + var(--slide-gap))))`,
+              ...(animating ? {} : {transition: 'none'}),
+            }}>
+            {heroLoop.map((s, i) => (
+              <div key={i}
+                onClick={() => setPos(i)}
+                className={`relative flex-shrink-0 aspect-[4/5] overflow-hidden bg-[var(--border)] transition-opacity duration-[1100ms] ${
+                  i === pos ? 'opacity-100' : 'opacity-40 cursor-pointer hover:opacity-60'
+                }`}
+                style={{width: 'var(--slide-w)', marginRight: 'var(--slide-gap)'}}>
+                <img src={s.img} alt={s.title} className="w-full h-full object-cover" aria-hidden={i !== pos} />
+              </div>
+            ))}
+          </div>
+
+          {/* Anchored over the centre frame so the quote stays put while the
+              images slide beneath it. */}
+          <div className="absolute left-1/2 -translate-x-1/2 bottom-0 h-2/3 w-[var(--slide-w)] bg-gradient-to-t from-black/85 via-black/25 to-transparent pointer-events-none" />
+
+          <div className="absolute left-1/2 -translate-x-1/2 bottom-0 w-[var(--slide-w)] p-6 sm:p-7 flex items-end justify-between gap-5">
+            <div>
+              <h1 className="font-classic italic text-white text-lg sm:text-xl lg:text-2xl leading-snug">
+                &ldquo;{HERO_QUOTE}&rdquo;
               </h1>
-              <p className="text-[var(--text-muted)] text-sm sm:text-[15px] leading-[1.9] max-w-md mt-8 mb-10 animate-fade-up font-light" style={{animationDelay: '0.24s'}}>
-                Original paintings, fine art prints &amp; custom commissions —
-                each piece handcrafted with love, intention, and a little bit of magic.
-              </p>
-              <div className="flex flex-wrap gap-4 animate-fade-up" style={{animationDelay: '0.36s'}}>
-                <Link href="/shop" className="btn-primary inline-block">
+              <div className="mt-5">
+                <Link href="/shop" className="btn-light btn-sm inline-block">
                   Explore Gallery
-                </Link>
-                <Link href="/about" className="btn-outline inline-block">
-                  My Story
                 </Link>
               </div>
             </div>
-
-            <div className="order-1 lg:order-2 animate-fade-up" style={{animationDelay: '0.2s'}}>
-              <div className="aspect-[4/5] overflow-hidden">
-                <img src={d('1Eqjxlph19X978jzZGMe1t4l8LqSaVl5b')} alt="Featured artwork — Maa Durga"
-                  className="w-full h-full object-cover" />
-              </div>
+            <div className="flex flex-col gap-1.5 flex-shrink-0 pb-1.5">
+              {heroSlides.map((s, i) => (
+                <button key={s.title} onClick={() => setPos(pos - active + i)}
+                  aria-label={`View ${s.title}`}
+                  className={`w-[2px] transition-all duration-500 ${
+                    i === active ? 'h-6 bg-white' : 'h-3 bg-white/40 hover:bg-white/70'
+                  }`} />
+              ))}
             </div>
           </div>
         </div>
@@ -123,6 +227,76 @@ export default function Home() {
           ))}
         </div>
       </div>
+
+      {/* ════════ EXPLORE GALLERY — filterable preview ════════ */}
+      <section className="py-12 lg:py-16">
+        <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
+          <div className="text-center mb-10">
+            <p className="text-[11px] tracking-[0.3em] uppercase text-[var(--accent)] mb-3 font-medium">The Gallery</p>
+            <h2 className="font-editorial text-4xl sm:text-5xl lg:text-6xl font-light">
+              Explore <span className="font-classic italic">Gallery</span>
+            </h2>
+            <p className="text-[var(--text-muted)] text-sm leading-[1.9] mt-5 max-w-md mx-auto font-light">
+              Filter by category and find the piece that speaks to you.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap justify-center gap-1.5 sm:gap-2 mb-12">
+            {categories.filter(c => c !== 'Commissions').map(cat => (
+              <button key={cat} onClick={() => setActiveCat(cat)}
+                className={`text-[10px] sm:text-[11px] tracking-[0.08em] px-3 sm:px-4 py-2 uppercase whitespace-nowrap border transition-all duration-300 ${
+                  activeCat === cat
+                    ? 'bg-[var(--text)] text-[var(--bg)] border-[var(--text)]'
+                    : 'border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text)] hover:border-[var(--text)]'
+                }`}>
+                {cat}
+              </button>
+            ))}
+            <button onClick={() => setActiveCat(CUSTOM_FILTER)}
+              className={`text-[10px] sm:text-[11px] tracking-[0.08em] px-4 sm:px-6 py-2 uppercase whitespace-nowrap border font-medium text-white transition-all duration-300 ${
+                activeCat === CUSTOM_FILTER
+                  ? 'bg-[var(--accent-dark)] border-[var(--accent-dark)]'
+                  : 'bg-[var(--accent)] border-[var(--accent)] hover:bg-[var(--accent-dark)] hover:border-[var(--accent-dark)]'
+              }`}>
+              {CUSTOM_FILTER}
+            </button>
+          </div>
+
+          <div key={activeCat} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-10 sm:gap-x-5 sm:gap-y-12">
+            {galleryPreview.map((art, i) => (
+              <Link href={`/artwork/${art.id}`} key={art.id}
+                className="group block animate-fade-up" style={{animationDelay: `${i * 0.07}s`}}>
+                <div className="relative aspect-[3/4] overflow-hidden mb-3 bg-[var(--border)]">
+                  <img src={art.image} alt={art.title} className="w-full h-full object-cover img-zoom" />
+                  {!art.available && <SoldOutOverlay />}
+                </div>
+                <h3 className="font-display text-sm sm:text-base truncate">{art.title}</h3>
+                <p className="text-[var(--text-light)] text-[11px] mt-0.5">{art.medium}</p>
+                <p className="text-[var(--text-light)] text-[9px] tracking-[0.1em] uppercase mt-0.5">{art.category}</p>
+                {(art.category === 'Originals' || !art.available) && (
+                  <StockLabel artwork={art} className="block text-[9px] tracking-[0.1em] uppercase mt-0.5" />
+                )}
+                <div className="flex items-center justify-between gap-2 mt-1.5">
+                  <PriceTag artwork={art} />
+                  <span className="hidden lg:inline-block text-[10px] tracking-[0.1em] uppercase text-[var(--accent)] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+                    View Details &rarr;
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-14">
+            <Link href={activeCat === 'All' || activeCat === CUSTOM_FILTER ? '/shop' : `/shop?category=${encodeURIComponent(activeCat)}`}
+              className="btn-primary inline-block">
+              View All Works
+            </Link>
+            <Link href="/contact" className="btn-outline inline-block">
+              Request a Custom Piece
+            </Link>
+          </div>
+        </div>
+      </section>
 
       {/* ════════ COLLECTIONS — text under images ════════ */}
       <section className="py-24 lg:py-32">

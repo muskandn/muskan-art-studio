@@ -4,6 +4,8 @@ import { useState } from 'react'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
+import PriceTag from '@/components/PriceTag'
+import StockLabel, { SoldOutOverlay } from '@/components/StockLabel'
 import { artworks, Artwork } from '@/data/artworks'
 
 export default function ArtworkClient({ artwork }: { artwork: Artwork }) {
@@ -65,12 +67,13 @@ export default function ArtworkClient({ artwork }: { artwork: Artwork }) {
 
             {/* ═══ LEFT — IMAGES ═══ */}
             <div className="space-y-4">
-              <div className="aspect-[4/5] overflow-hidden bg-[var(--border)] animate-fade-in">
+              <div className="relative aspect-[4/5] overflow-hidden bg-[var(--border)] animate-fade-in">
                 <img
                   src={artwork.images[selectedImage]}
                   alt={`${artwork.title} — View ${selectedImage + 1}`}
                   className="w-full h-full object-cover transition-all duration-500"
                 />
+                {!artwork.available && <SoldOutOverlay />}
               </div>
 
               <div className="grid grid-cols-3 gap-3">
@@ -100,9 +103,9 @@ export default function ArtworkClient({ artwork }: { artwork: Artwork }) {
                   {artwork.title}
                 </h1>
 
-                <p className="font-classic text-xl text-[var(--accent)] mb-6">
-                  {artwork.price ? `₹${artwork.price}` : 'Price on Request'}
-                </p>
+                <div className="mb-6">
+                  <PriceTag artwork={artwork} variant="detail" />
+                </div>
 
                 <div className="divider mb-8" />
 
@@ -116,6 +119,19 @@ export default function ArtworkClient({ artwork }: { artwork: Artwork }) {
                   </p>
                 </div>
 
+                {artwork.inspiration && (
+                  <div className="mb-8">
+                    <h3 className="text-[10px] tracking-[0.25em] uppercase text-[var(--text-light)] mb-3 font-medium">
+                      What Inspired This
+                    </h3>
+                    {artwork.inspiration.split('\n\n').map((para, i) => (
+                      <p key={i} className="text-[var(--text-muted)] text-sm leading-[1.9] font-light mb-3 last:mb-0">
+                        {para}
+                      </p>
+                    ))}
+                  </div>
+                )}
+
                 {/* SPECS */}
                 <div className="grid grid-cols-2 gap-x-8 gap-y-4 mb-8 py-6 border-y border-[var(--border)]">
                   <div>
@@ -124,7 +140,7 @@ export default function ArtworkClient({ artwork }: { artwork: Artwork }) {
                   </div>
                   <div>
                     <p className="text-[10px] tracking-[0.2em] uppercase text-[var(--text-light)] mb-1 font-medium">Size</p>
-                    <p className="text-sm text-[var(--text-muted)]">Customizable</p>
+                    <p className="text-sm text-[var(--text-muted)]">{artwork.size}</p>
                   </div>
                   <div>
                     <p className="text-[10px] tracking-[0.2em] uppercase text-[var(--text-light)] mb-1 font-medium">Year</p>
@@ -132,31 +148,56 @@ export default function ArtworkClient({ artwork }: { artwork: Artwork }) {
                   </div>
                   <div>
                     <p className="text-[10px] tracking-[0.2em] uppercase text-[var(--text-light)] mb-1 font-medium">Status</p>
-                    <p className="text-sm text-green-600">Available</p>
+                    <StockLabel artwork={artwork} className="text-sm" />
                   </div>
                 </div>
 
+                {artwork.category === 'Originals' && (
+                  <p className="text-[var(--text-muted)] text-xs leading-[1.9] -mt-4 mb-8 font-light">
+                    Every original is one of a kind, so no two are the same size — all of them are
+                    comfortably larger than A4.{' '}
+                    <button onClick={handleContactMe}
+                      className="link-underline text-[var(--accent)] font-medium">
+                      Email me for the exact dimensions
+                    </button>
+                    {' '}of this piece.
+                  </p>
+                )}
+
                 {/* ACTIONS */}
                 <div className="space-y-3">
-                  {!addedToCart ? (
-                    <button onClick={handleAddToCart} className="btn-primary w-full text-center">
-                      Add to Cart
-                    </button>
+                  {!artwork.available ? (
+                    <>
+                      <div className="w-full py-3.5 text-[11px] tracking-[0.2em] uppercase border border-red-600 text-red-600 text-center font-medium">
+                        Sold Out
+                      </div>
+                      <button onClick={handleContactMe} className="btn-outline w-full text-center">
+                        Enquire About a Similar Piece
+                      </button>
+                    </>
                   ) : (
-                    <button disabled className="w-full py-3.5 text-[11px] tracking-[0.15em] uppercase bg-[var(--accent)] text-white text-center">
-                      ✓ Added to Cart
-                    </button>
+                    <>
+                      {!addedToCart ? (
+                        <button onClick={handleAddToCart} className="btn-primary w-full text-center">
+                          Add to Cart
+                        </button>
+                      ) : (
+                        <button disabled className="w-full py-3.5 text-[11px] tracking-[0.15em] uppercase bg-[var(--accent)] text-white text-center">
+                          ✓ Added to Cart
+                        </button>
+                      )}
+
+                      <button onClick={handleSendInquiry}
+                        className="btn-outline w-full text-center">
+                        Buy Now — Send Inquiry
+                      </button>
+
+                      <button onClick={handleContactMe}
+                        className="w-full py-3 text-[11px] tracking-[0.15em] uppercase text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors text-center">
+                        Have Questions? Contact Me
+                      </button>
+                    </>
                   )}
-
-                  <button onClick={handleSendInquiry}
-                    className="btn-outline w-full text-center">
-                    Buy Now — Send Inquiry
-                  </button>
-
-                  <button onClick={handleContactMe}
-                    className="w-full py-3 text-[11px] tracking-[0.15em] uppercase text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors text-center">
-                    Have Questions? Contact Me
-                  </button>
                 </div>
 
                 {/* SHIPPING INFO */}

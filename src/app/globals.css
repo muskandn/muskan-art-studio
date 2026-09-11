@@ -194,6 +194,26 @@ body {
   color: var(--bg);
 }
 
+.btn-light {
+  background: #FFFFFF;
+  color: #1A1A1A;
+  padding: 14px 36px;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  transition: all 0.4s ease;
+}
+
+.btn-light:hover {
+  opacity: 0.88;
+  transform: translateY(-1px);
+}
+
+.btn-sm {
+  padding: 9px 22px;
+  font-size: 10px;
+}
+
 .divider {
   width: 60px;
   height: 1px;
