@@ -4,23 +4,12 @@ import { useState } from 'react'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
+import InquiryModal from '@/components/InquiryModal'
+
+const SUBJECT_OPTIONS = ['General Inquiry', 'Purchase Inquiry', 'Commission Request', 'Collaboration', 'Other']
 
 export default function ContactPage() {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    subject: 'General Inquiry',
-    message: '',
-  })
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    const subject = encodeURIComponent(formData.subject + ' — ' + formData.name)
-    const body = encodeURIComponent(
-      `Name: ${formData.name}\nEmail: ${formData.email}\n\n${formData.message}`
-    )
-    window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=creativelogsmuskan@gmail.com&su=${subject}&body=${body}`, '_blank')
-  }
+  const [open, setOpen] = useState(false)
 
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
@@ -62,10 +51,13 @@ export default function ContactPage() {
               <div className="space-y-8">
                 <div>
                   <p className="text-[10px] tracking-[0.2em] uppercase text-[var(--text-light)] mb-2 font-medium">Email</p>
-                  <a href="https://mail.google.com/mail/?view=cm&fs=1&to=creativelogsmuskan@gmail.com" target="_blank" rel="noopener noreferrer"
+                  <a href="mailto:creativelogsmuskan@gmail.com"
                     className="text-sm text-[var(--text)] hover:text-[var(--accent)] transition-colors">
                     creativelogsmuskan@gmail.com
                   </a>
+                  <p className="text-[10px] text-[var(--text-light)] mt-1">
+                    or use the <button onClick={() => setOpen(true)} className="link-underline text-[var(--accent)]">on-site form</button>
+                  </p>
                 </div>
 
                 <div>
@@ -88,78 +80,24 @@ export default function ContactPage() {
               </div>
             </div>
 
-            {/* RIGHT — FORM */}
-            <div className="bg-[var(--bg-warm)] p-8 sm:p-12 transition-colors">
-              <h3 className="font-editorial text-2xl mb-8">Send a Message</h3>
-
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div>
-                  <label className="block text-[10px] tracking-[0.2em] uppercase text-[var(--text-light)] mb-2 font-medium">
-                    Your Name
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    className="w-full bg-transparent border-b border-[var(--border)] py-3 text-sm text-[var(--text)] focus:border-[var(--accent)] outline-none transition-colors placeholder:text-[var(--text-light)]"
-                    placeholder="Enter your name"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[10px] tracking-[0.2em] uppercase text-[var(--text-light)] mb-2 font-medium">
-                    Email Address
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    className="w-full bg-transparent border-b border-[var(--border)] py-3 text-sm text-[var(--text)] focus:border-[var(--accent)] outline-none transition-colors placeholder:text-[var(--text-light)]"
-                    placeholder="your@email.com"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[10px] tracking-[0.2em] uppercase text-[var(--text-light)] mb-2 font-medium">
-                    Subject
-                  </label>
-                  <select
-                    value={formData.subject}
-                    onChange={(e) => setFormData({...formData, subject: e.target.value})}
-                    className="w-full bg-transparent border-b border-[var(--border)] py-3 text-sm text-[var(--text)] focus:border-[var(--accent)] outline-none transition-colors cursor-pointer"
-                  >
-                    <option value="General Inquiry">General Inquiry</option>
-                    <option value="Purchase Inquiry">Purchase Inquiry</option>
-                    <option value="Commission Request">Commission Request</option>
-                    <option value="Collaboration">Collaboration</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-[10px] tracking-[0.2em] uppercase text-[var(--text-light)] mb-2 font-medium">
-                    Message
-                  </label>
-                  <textarea
-                    required
-                    rows={5}
-                    value={formData.message}
-                    onChange={(e) => setFormData({...formData, message: e.target.value})}
-                    className="w-full bg-transparent border-b border-[var(--border)] py-3 text-sm text-[var(--text)] focus:border-[var(--accent)] outline-none transition-colors resize-none placeholder:text-[var(--text-light)]"
-                    placeholder="Tell me about your vision..."
-                  />
-                </div>
-
-                <button type="submit" className="btn-primary w-full text-center mt-4">
-                  Send Message
-                </button>
-
-                <p className="text-[10px] text-center text-[var(--text-light)] tracking-wide">
-                  This will open Gmail compose with the message details
-                </p>
-              </form>
+            {/* RIGHT — SEND MESSAGE CARD */}
+            <div className="bg-[var(--bg-warm)] p-8 sm:p-12 transition-colors flex flex-col justify-center">
+              <p className="text-[10px] tracking-[0.25em] uppercase text-[var(--accent)] mb-3 font-medium">
+                Send Query
+              </p>
+              <h3 className="font-editorial text-3xl sm:text-4xl font-light mb-4">
+                Drop me a <span className="italic">line</span>
+              </h3>
+              <p className="text-[var(--text-muted)] text-sm leading-[1.9] mb-8 max-w-md">
+                Purchase enquiries, custom commissions, collaborations, or a simple hello —
+                everything comes straight to my inbox. I&apos;ll reply within 24–48 hours.
+              </p>
+              <button onClick={() => setOpen(true)} className="btn-primary self-start">
+                Send a Message
+              </button>
+              <p className="text-[10px] text-[var(--text-light)] tracking-wide mt-4">
+                Opens a short form. No email app required.
+              </p>
             </div>
           </div>
         </div>
@@ -207,6 +145,13 @@ export default function ContactPage() {
       </section>
 
       <Footer />
+
+      <InquiryModal
+        open={open}
+        onClose={() => setOpen(false)}
+        context="general"
+        subjectOptions={SUBJECT_OPTIONS}
+      />
     </div>
   )
 }

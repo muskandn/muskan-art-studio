@@ -6,42 +6,12 @@ import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import PriceTag from '@/components/PriceTag'
 import StockLabel, { SoldOutOverlay } from '@/components/StockLabel'
+import InquiryModal, { InquiryContext } from '@/components/InquiryModal'
 import { artworks, Artwork } from '@/data/artworks'
 
 export default function ArtworkClient({ artwork }: { artwork: Artwork }) {
   const [selectedImage, setSelectedImage] = useState(0)
-  const [selectedSize, setSelectedSize] = useState('')
-  const [addedToCart, setAddedToCart] = useState(false)
-  const [showConfirmation, setShowConfirmation] = useState(false)
-
-  const defaultSize = selectedSize || artwork.size
-
-  const handleAddToCart = () => {
-    setAddedToCart(true)
-    setShowConfirmation(true)
-  }
-
-  const handleSendInquiry = () => {
-    const subject = encodeURIComponent(`Purchase Inquiry — ${artwork.title}`)
-    const body = encodeURIComponent(
-      `Hi Muskan,\n\nI would like to purchase the following artwork:\n\n` +
-      `Title: ${artwork.title}\n` +
-      `Medium: ${artwork.medium}\n` +
-      `Size: ${defaultSize}\n` +
-      `Year: ${artwork.year}\n\n` +
-      `Please let me know the pricing, availability, and shipping details.\n\nThank you!`
-    )
-    window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=creativelogsmuskan@gmail.com&su=${subject}&body=${body}`, '_blank')
-  }
-
-  const handleContactMe = () => {
-    const subject = encodeURIComponent(`Inquiry about "${artwork.title}"`)
-    const body = encodeURIComponent(
-      `Hi Muskan,\n\nI am interested in "${artwork.title}" (${artwork.medium}, ${defaultSize}).\n\n` +
-      `Could you please share more details?\n\nThank you!`
-    )
-    window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=creativelogsmuskan@gmail.com&su=${subject}&body=${body}`, '_blank')
-  }
+  const [inquiry, setInquiry] = useState<InquiryContext | null>(null)
 
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
@@ -156,7 +126,7 @@ export default function ArtworkClient({ artwork }: { artwork: Artwork }) {
                   <p className="text-[var(--text-muted)] text-xs leading-[1.9] -mt-4 mb-8 font-light">
                     Every original is one of a kind, so no two are the same size — all of them are
                     comfortably larger than A4.{' '}
-                    <button onClick={handleContactMe}
+                    <button onClick={() => setInquiry('size')}
                       className="link-underline text-[var(--accent)] font-medium">
                       Email me for the exact dimensions
                     </button>
@@ -171,28 +141,17 @@ export default function ArtworkClient({ artwork }: { artwork: Artwork }) {
                       <div className="w-full py-3.5 text-[11px] tracking-[0.2em] uppercase border border-red-600 text-red-600 text-center font-medium">
                         Sold Out
                       </div>
-                      <button onClick={handleContactMe} className="btn-outline w-full text-center">
+                      <button onClick={() => setInquiry('similar')} className="btn-outline w-full text-center">
                         Enquire About a Similar Piece
                       </button>
                     </>
                   ) : (
                     <>
-                      {!addedToCart ? (
-                        <button onClick={handleAddToCart} className="btn-primary w-full text-center">
-                          Add to Cart
-                        </button>
-                      ) : (
-                        <button disabled className="w-full py-3.5 text-[11px] tracking-[0.15em] uppercase bg-[var(--accent)] text-white text-center">
-                          ✓ Added to Cart
-                        </button>
-                      )}
-
-                      <button onClick={handleSendInquiry}
-                        className="btn-outline w-full text-center">
-                        Buy Now — Send Inquiry
+                      <button onClick={() => setInquiry('purchase')} className="btn-primary w-full text-center">
+                        Send Purchase Inquiry
                       </button>
 
-                      <button onClick={handleContactMe}
+                      <button onClick={() => setInquiry('question')}
                         className="w-full py-3 text-[11px] tracking-[0.15em] uppercase text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors text-center">
                         Have Questions? Contact Me
                       </button>
@@ -236,35 +195,12 @@ export default function ArtworkClient({ artwork }: { artwork: Artwork }) {
         </div>
       </section>
 
-      {/* CONFIRMATION MODAL */}
-      {showConfirmation && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" onClick={() => setShowConfirmation(false)}>
-          <div className="absolute inset-0 bg-black/40" />
-          <div className="relative bg-[var(--bg)] p-8 sm:p-10 max-w-md w-full text-center animate-scale-in" onClick={e => e.stopPropagation()}>
-            <div className="w-12 h-12 rounded-full bg-[var(--accent)] text-white flex items-center justify-center mx-auto mb-5">
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <h3 className="font-editorial text-2xl mb-2">Added to Cart!</h3>
-            <p className="text-[var(--text-muted)] text-sm mb-6">
-              <span className="font-medium text-[var(--text)]">{artwork.title}</span> ({defaultSize}) has been added.
-            </p>
-            <div className="space-y-3">
-              <button onClick={handleSendInquiry} className="btn-primary w-full text-center">
-                Send Purchase Inquiry
-              </button>
-              <p className="text-[10px] text-[var(--text-light)] tracking-wide">
-                An email will be sent with all the details. I&apos;ll get back to you at the earliest!
-              </p>
-              <button onClick={() => setShowConfirmation(false)}
-                className="w-full py-2 text-[11px] tracking-[0.15em] uppercase text-[var(--text-muted)] hover:text-[var(--text)] transition-colors">
-                Continue Browsing
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <InquiryModal
+        open={inquiry !== null}
+        onClose={() => setInquiry(null)}
+        context={inquiry ?? 'question'}
+        productName={artwork.title}
+      />
 
       {/* YOU MAY ALSO LIKE */}
       <section className="py-20 lg:py-28 bg-[var(--bg-warm)] transition-colors">

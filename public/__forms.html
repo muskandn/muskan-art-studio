@@ -1,0 +1,22 @@
+<!--
+  Static form declaration that Netlify's build bot detects at deploy time to
+  register the "inquiry" form. The real form is rendered by React inside
+  <InquiryModal>, which POSTs to `/` with `form-name=inquiry`. The bot cannot
+  see JSX, hence this static copy — every field name here must match the
+  modal.
+-->
+<!DOCTYPE html>
+<html>
+  <head><meta charset="utf-8" /></head>
+  <body>
+    <form name="inquiry" method="POST" data-netlify="true" netlify-honeypot="bot-field">
+      <input type="hidden" name="form-name" value="inquiry" />
+      <p hidden><label>Do not fill this out: <input name="bot-field" /></label></p>
+      <input name="name" type="text" />
+      <input name="email" type="email" />
+      <input name="context" type="text" />
+      <input name="product" type="text" />
+      <textarea name="message"></textarea>
+    </form>
+  </body>
+</html>
