@@ -7,6 +7,7 @@ import Footer from '@/components/Footer'
 import PriceTag from '@/components/PriceTag'
 import StockLabel, { SoldOutOverlay } from '@/components/StockLabel'
 import InquiryModal, { InquiryContext } from '@/components/InquiryModal'
+import ShareButton from '@/components/ShareButton'
 import { artworks, Artwork } from '@/data/artworks'
 
 export default function ArtworkClient({ artwork }: { artwork: Artwork }) {
@@ -73,8 +74,12 @@ export default function ArtworkClient({ artwork }: { artwork: Artwork }) {
                   {artwork.title}
                 </h1>
 
-                <div className="mb-6">
+                <div className="mb-6 flex items-center justify-between gap-4 flex-wrap">
                   <PriceTag artwork={artwork} variant="detail" />
+                  <ShareButton
+                    title={`${artwork.title} — Muskan Art Studio`}
+                    description={`${artwork.title} · ${artwork.medium}`}
+                  />
                 </div>
 
                 <div className="divider mb-8" />
